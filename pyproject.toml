@@ -1,0 +1,18 @@
+[project]
+name = "dslr"
+version = "1.0.0"
+description = "42 DSLR: one-vs-all logistic regression (Harry Potter and the Data Scientist)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+    "pandas>=2.1",
+]
+
+[dependency-groups]
+# Only used to cross-check accuracy; the scripts never import it.
+dev = ["scikit-learn>=1.4"]
+
+[tool.uv]
+package = false
