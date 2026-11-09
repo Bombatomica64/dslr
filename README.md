@@ -5,20 +5,21 @@ regression trained by gradient descent. No built-in statistics are used: `count`
 `std`, `min`, `max` and quantiles are hand-written in `dslr_common.py`.
 
 ## Setup
+Dependencies are managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`).
 ```sh
-python3 -m venv .venv && .venv/bin/pip install pandas numpy matplotlib
-# scikit-learn is only needed to cross-check accuracy, not by the scripts
+uv sync              # creates .venv with pandas, numpy, matplotlib (+ scikit-learn, dev group)
+uv sync --no-dev     # without scikit-learn, which only cross-checks accuracy
 ```
 
 ## Usage
 ```sh
-./describe.py datasets/dataset_train.csv            # describe table (features as columns)
-./histogram.py datasets/dataset_train.csv [-o h.png]
-./scatter_plot.py datasets/dataset_train.csv [-o s.png]
-./pair_plot.py datasets/dataset_train.csv [-o p.png]
-./logreg_train.py datasets/dataset_train.csv [batch|mini_batch|stochastic] [-o weights.pkl] [--seed 42]
-./logreg_predict.py datasets/dataset_test.csv weights.pkl   # writes houses.csv
-./compare.py [houses.csv] [datasets/dataset_truth.csv]      # accuracy vs the truth file
+uv run describe.py datasets/dataset_train.csv            # describe table (features as columns)
+uv run histogram.py datasets/dataset_train.csv [-o h.png]
+uv run scatter_plot.py datasets/dataset_train.csv [-o s.png]
+uv run pair_plot.py datasets/dataset_train.csv [-o p.png]
+uv run logreg_train.py datasets/dataset_train.csv [batch|mini_batch|stochastic] [-o weights.pkl] [--seed 42]
+uv run logreg_predict.py datasets/dataset_test.csv weights.pkl   # writes houses.csv
+uv run compare.py [houses.csv] [datasets/dataset_truth.csv]      # accuracy vs the truth file
 ```
 Plots open a window; with `MPLBACKEND=Agg` pass `-o` to save them headless.
 
