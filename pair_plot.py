@@ -1,130 +1,65 @@
-#! ./.venv/bin/python3
-import sys
-import pandas as pd
-import matplotlib.pyplot as plt
+#!/usr/bin/env python3
+"""pair_plot.py dataset_train.csv [-o out.png]
+
+From this visualization, what features are you going to use for your logistic regression?
+"""
+import argparse
+import textwrap
+
 import matplotlib.lines as mlines
-import numpy as np
+import matplotlib.pyplot as plt
+
+from dslr_common import (DROPPED_FEATURES, FEATURES, HOUSE_COLORS, HOUSE_COLUMN, load_csv,
+	numeric_courses, require_house_column)
+
+
+def main():
+	parser = argparse.ArgumentParser(description='Pair plot of every course, per house.')
+	parser.add_argument('dataset')
+	parser.add_argument('-o', '--output', help='save the figure instead of only showing it')
+	args = parser.parse_args()
+
+	data = load_csv(args.dataset)
+	require_house_column(data, args.dataset)
+	courses = numeric_courses(data)
+	if len(courses) < 2:
+		raise SystemExit("Error: need at least 2 numeric features.")
+	houses = sorted(data[HOUSE_COLUMN].dropna().unique())
+
+	print(f"Answer: features used for training ({len(FEATURES)}): {', '.join(FEATURES)}")
+	print("Dropped:")
+	for feature, reason in DROPPED_FEATURES.items():
+		print(f"  {feature}: {reason}")
+
+	n = len(courses)
+	fig, axes = plt.subplots(n, n, figsize=(2 * n, 2 * n))
+	for i, row in enumerate(courses):
+		for j, col in enumerate(courses):
+			ax = axes[i, j]
+			for house in houses:
+				subset = data[data[HOUSE_COLUMN] == house]
+				if i == j:
+					ax.hist(subset[row].dropna(), bins=20, alpha=0.5, color=HOUSE_COLORS.get(house))
+				else:
+					ax.scatter(subset[col], subset[row], s=2, alpha=0.4, color=HOUSE_COLORS.get(house))
+			ax.set_xticks([])
+			ax.set_yticks([])
+			if j == 0:
+				ax.set_ylabel(textwrap.fill(row, 14), fontsize=8,
+					color='black' if row in FEATURES else 'darkred')
+			if i == n - 1:
+				ax.set_xlabel(textwrap.fill(col, 14), fontsize=8,
+					color='black' if col in FEATURES else 'darkred')
+	handles = [mlines.Line2D([], [], marker='o', ls='', color=HOUSE_COLORS.get(h)) for h in houses]
+	fig.legend(handles, houses, loc='upper right')
+	fig.suptitle("Diagonal: per-house histograms. Features used for training (red labels = dropped):\n"
+		+ textwrap.fill(', '.join(FEATURES), 120), fontsize=14)
+	fig.tight_layout(rect=(0, 0, 0.93, 0.95))
+	if args.output:
+		fig.savefig(args.output, dpi=80)
+		print(f"Figure saved to '{args.output}'")
+	plt.show()
+
 
 if __name__ == "__main__":
-	if len(sys.argv) < 2:
-		print("Usage: ./pair_plot.py <filename>")
-		sys.exit(1)
-
-	filename = sys.argv[1]
-	
-	try:
-		data = pd.read_csv(filename)
-
-		# Get all numeric columns (courses)
-		numeric_cols = data.select_dtypes(include=['float64', 'int64']).columns
-		courses = [col for col in numeric_cols if col != 'Index']
-		
-		# Filter out columns with too many NaN values
-		courses = [col for col in courses if data[col].count() > 0]
-		
-		if len(courses) < 2:
-			print("Error: Need at least 2 numeric columns to create pair plot.")
-			sys.exit(1)
-		
-		# Get houses (remove NaN)
-		houses = []
-		if 'Hogwarts House' in data.columns:
-			houses = data['Hogwarts House'].unique()
-			houses = [h for h in houses if pd.notna(h)]
-		
-		# Define colors for houses
-		house_colors = {
-			'Gryffindor': 'red',
-			'Slytherin': 'green',
-			'Ravenclaw': 'blue',
-			'Hufflepuff': 'gold'
-		}
-		extra_colors = ['purple', 'orange', 'brown', 'pink', 'cyan', 'magenta', 'lime', 'navy', 'teal', 'coral']
-		
-		# Create the pair plot grid
-		n = len(courses)
-		fig, axes = plt.subplots(n, n, figsize=(20, 20))
-		fig.suptitle('Pair Plot - Histograms on Diagonal, Scatter Plots for Correlations', fontsize=16, y=0.995)
-		
-		for i in range(n):
-			for j in range(n):
-				ax = axes[i, j] if n > 1 else axes
-				
-				if i == j:
-					# Diagonal: histogram for each house
-					if len(houses) > 0:
-						color_idx = 0
-						for house in houses:
-							house_data = data[data['Hogwarts House'] == house][courses[i]].dropna()
-							if house in house_colors:
-								color = house_colors[house]
-							else:
-								color = extra_colors[color_idx % len(extra_colors)]
-								color_idx += 1
-							ax.hist(house_data, alpha=0.5, bins=20, color=color, label=house if j == n-1 else "")
-					else:
-						ax.hist(data[courses[i]].dropna(), alpha=0.6, bins=20, color='blue')
-					ax.set_ylabel('Frequency', fontsize=8)
-					if i == 0:
-						ax.set_title(courses[i], fontsize=9, fontweight='bold')
-				else:
-					# Off-diagonal: scatter plot
-					if len(houses) > 0:
-						color_idx = 0
-						for house in houses:
-							house_data = data[data['Hogwarts House'] == house]
-							if house in house_colors:
-								color = house_colors[house]
-							else:
-								color = extra_colors[color_idx % len(extra_colors)]
-								color_idx += 1
-							ax.scatter(house_data[courses[j]], house_data[courses[i]], 
-									 alpha=0.4, s=5, c=color, edgecolors='none')
-					else:
-						ax.scatter(data[courses[j]], data[courses[i]], 
-								 alpha=0.4, s=5, c='blue', edgecolors='none')
-				
-				# Labels
-				if j == 0:
-					ax.set_ylabel(courses[i], fontsize=8)
-				else:
-					ax.set_ylabel('')
-				
-				if i == n-1:
-					ax.set_xlabel(courses[j], fontsize=8)
-				else:
-					ax.set_xlabel('')
-				
-				# Smaller tick labels
-				ax.tick_params(labelsize=6)
-		
-		# Add legend for houses (if available)
-		if len(houses) > 0:
-			handles = []
-			labels = []
-			color_idx = 0
-			for house in houses:
-				if house in house_colors:
-					color = house_colors[house]
-				else:
-					color = extra_colors[color_idx % len(extra_colors)]
-					color_idx += 1
-				handles.append(mlines.Line2D([0], [0], marker='o', color='w', 
-										  markerfacecolor=color, markersize=8, alpha=0.6))
-				labels.append(house)
-			fig.legend(handles, labels, loc='upper right', bbox_to_anchor=(0.98, 0.98), fontsize=10)
-		
-		plt.tight_layout()
-		plt.show()
-	except FileNotFoundError:
-		print(f"Error: File '{filename}' not found.")
-		sys.exit(1)
-	except pd.errors.EmptyDataError:
-		print(f"Error: File '{filename}' is empty.")
-		sys.exit(1)
-	except pd.errors.ParserError:
-		print(f"Error: Unable to parse '{filename}'. Make sure it's a valid CSV file.")
-		sys.exit(1)
-	except Exception as e:
-		print(f"Error: An unexpected error occurred: {e}")
-		sys.exit(1)
+	main()
