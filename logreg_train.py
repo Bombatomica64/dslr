@@ -10,8 +10,19 @@ import pickle
 import sys
 
 import numpy as np
+import pandas as pd
+from numpy.typing import NDArray
 
-from dslr_common import FEATURES, HOUSE_COLUMN, load_csv, mean, require_house_column, std
+Array = NDArray[np.float64]
+
+from dslr_common import (
+	FEATURES,
+	HOUSE_COLUMN,
+	load_csv,
+	mean,
+	require_house_column,
+	std,
+)
 
 MODES = ('batch', 'mini_batch', 'stochastic')
 # (learning rate, iterations/epochs) per mode, tuned on standardised features.
@@ -24,28 +35,28 @@ BATCH_SIZE = 32
 SEED = 42
 
 
-def sigmoid(z):
+def sigmoid(z: Array) -> Array:
 	return 1.0 / (1.0 + np.exp(-z))
 
 
-def cost(X, y, theta) -> float:
+def cost(X: Array, y: Array, theta: Array) -> float:
 	h = sigmoid(X @ theta)
 	eps = 1e-15
 	return float(-np.sum(y * np.log(h + eps) + (1 - y) * np.log(1 - h + eps)) / len(y))
 
 
-def gradient(X, y, theta):
+def gradient(X: Array, y: Array, theta: Array) -> Array:
 	return X.T @ (sigmoid(X @ theta) - y) / len(y)
 
 
-def batch_gd(X, y, lr, iterations, rng):
+def batch_gd(X: Array, y: Array, lr: float, iterations: int, rng: np.random.Generator) -> Array:
 	theta = np.zeros(X.shape[1])
 	for _ in range(iterations):
 		theta -= lr * gradient(X, y, theta)
 	return theta
 
 
-def mini_batch_gd(X, y, lr, epochs, rng, batch_size=BATCH_SIZE):
+def mini_batch_gd(X: Array, y: Array, lr: float, epochs: int, rng: np.random.Generator, batch_size: int = BATCH_SIZE) -> Array:
 	theta = np.zeros(X.shape[1])
 	m = len(y)
 	for _ in range(epochs):
@@ -56,14 +67,14 @@ def mini_batch_gd(X, y, lr, epochs, rng, batch_size=BATCH_SIZE):
 	return theta
 
 
-def stochastic_gd(X, y, lr, epochs, rng):
+def stochastic_gd(X: Array, y: Array, lr: float, epochs: int, rng: np.random.Generator) -> Array:
 	return mini_batch_gd(X, y, lr, epochs, rng, batch_size=1)
 
 
 OPTIMISERS = {'batch': batch_gd, 'mini_batch': mini_batch_gd, 'stochastic': stochastic_gd}
 
 
-def prepare(data, means, stds):
+def prepare(data: pd.DataFrame, means: dict[str, float], stds: dict[str, float]) -> Array:
 	"""Fill NaN with the given (training) means, standardise, add the bias column."""
 	X = np.empty((len(data), len(FEATURES)))
 	for j, feature in enumerate(FEATURES):
@@ -97,7 +108,7 @@ def train(data, mode='batch', seed=SEED, verbose=True):
 	}
 
 
-def main():
+def main() -> None:
 	parser = argparse.ArgumentParser(description=__doc__.splitlines()[2])
 	parser.add_argument('dataset', help='training CSV (e.g. datasets/dataset_train.csv)')
 	parser.add_argument('mode', nargs='?', default='batch', choices=MODES,

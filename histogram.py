@@ -7,8 +7,15 @@ import argparse
 
 import matplotlib.pyplot as plt
 
-from dslr_common import (HOUSE_COLORS, HOUSE_COLUMN, load_csv, mean, numeric_courses,
-	require_house_column, std)
+from dslr_common import (
+	HOUSE_COLORS,
+	HOUSE_COLUMN,
+	load_csv,
+	mean,
+	numeric_courses,
+	require_house_column,
+	std,
+)
 
 
 def heterogeneity(data, course, houses) -> float:
@@ -17,7 +24,7 @@ def heterogeneity(data, course, houses) -> float:
 	return std(house_means) / std(data[course])
 
 
-def main():
+def main() -> None:
 	parser = argparse.ArgumentParser(description='Histogram of every course, per house.')
 	parser.add_argument('dataset')
 	parser.add_argument('-o', '--output', help='save the figure instead of only showing it')
@@ -31,13 +38,13 @@ def main():
 		raise SystemExit("Error: no course or house data found.")
 
 	scores = {c: heterogeneity(data, c, houses) for c in courses}
-	ranking = sorted(courses, key=scores.get)
+	ranking = sorted(courses, key=lambda course: scores[course])
 	answer = ranking[0]
 	print("Spread of house means / overall std (lower = more homogeneous):")
 	for c in ranking:
 		print(f"  {c:<30} {scores[c]:.3f}")
 	print(f"Answer: '{answer}' has the most homogeneous score distribution between the four houses"
-		f" (runner-up: '{ranking[1]}').")
+		+ (f" (runner-up: '{ranking[1]}')." if len(ranking) > 1 else '.'))
 
 	cols = 4
 	rows = (len(courses) + cols - 1) // cols

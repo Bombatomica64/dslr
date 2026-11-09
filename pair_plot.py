@@ -9,11 +9,18 @@ import textwrap
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 
-from dslr_common import (DROPPED_FEATURES, FEATURES, HOUSE_COLORS, HOUSE_COLUMN, load_csv,
-	numeric_courses, require_house_column)
+from dslr_common import (
+	DROPPED_FEATURES,
+	FEATURES,
+	HOUSE_COLORS,
+	HOUSE_COLUMN,
+	load_csv,
+	numeric_courses,
+	require_house_column,
+)
 
 
-def main():
+def main() -> None:
 	parser = argparse.ArgumentParser(description='Pair plot of every course, per house.')
 	parser.add_argument('dataset')
 	parser.add_argument('-o', '--output', help='save the figure instead of only showing it')

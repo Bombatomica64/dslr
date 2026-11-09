@@ -32,7 +32,7 @@ def predict(data: pd.DataFrame, model: dict) -> np.ndarray:
 	return np.array(houses)[np.argmax(probs, axis=1)]
 
 
-def main():
+def main() -> None:
 	if len(sys.argv) != 3:
 		sys.exit("Usage: ./logreg_predict.py <dataset_test.csv> <weights.pkl>")
 	data = load_csv(sys.argv[1])

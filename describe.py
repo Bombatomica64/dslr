@@ -2,16 +2,28 @@
 """describe.py dataset.csv - pandas-like describe() built from hand-written statistics."""
 import shutil
 import sys
+from collections.abc import Iterable
+from typing import Any
 
-from dslr_common import (count, load_csv, max_value, mean, min_value,
-	numeric_courses, quantile, std)
+import pandas as pd
+
+from dslr_common import (
+	count,
+	load_csv,
+	max_value,
+	mean,
+	min_value,
+	numeric_courses,
+	quantile,
+	std,
+)
 
 ROWS = ['Count', 'Mean', 'Std', 'Min', '25%', '50%', '75%', 'Max']
 COL_WIDTH = 14
 LABEL_WIDTH = 6
 
 
-def column_stats(series) -> list:
+def column_stats(series: Iterable[Any]) -> list[float]:
 	m = mean(series)
 	return [count(series), m, std(series, m), min_value(series),
 		quantile(series, 0.25), quantile(series, 0.5), quantile(series, 0.75),
@@ -23,7 +35,7 @@ def short_name(name: str) -> str:
 	return name if len(name) <= width else name[:width - 1] + '.'
 
 
-def describe(data) -> None:
+def describe(data: pd.DataFrame) -> None:
 	features = numeric_courses(data)
 	if not features:
 		sys.exit("Error: no numeric feature found.")

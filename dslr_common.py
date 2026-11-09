@@ -1,6 +1,8 @@
 """Shared helpers: hand-written statistics, the training feature list and CSV loading."""
-import sys
 import math
+import sys
+from collections.abc import Iterable
+from typing import Any
 
 import pandas as pd
 
@@ -36,22 +38,22 @@ DROPPED_FEATURES = {
 }
 
 
-def is_missing(value) -> bool:
+def is_missing(value: Any) -> bool:
 	return value is None or (isinstance(value, float) and math.isnan(value))
 
 
-def values(series) -> list:
+def values(series: Iterable[Any]) -> list[float]:
 	return [float(v) for v in series if not is_missing(v)]
 
 
-def count(series) -> int:
+def count(series: Iterable[Any]) -> int:
 	n = 0
 	for _ in values(series):
 		n += 1
 	return n
 
 
-def mean(series) -> float:
+def mean(series: Iterable[Any]) -> float:
 	total = 0.0
 	n = 0
 	for v in values(series):
@@ -60,7 +62,7 @@ def mean(series) -> float:
 	return total / n if n else float('nan')
 
 
-def std(series, mean_value=None) -> float:
+def std(series: Iterable[Any], mean_value: float | None = None) -> float:
 	"""Sample standard deviation (ddof=1), like pandas.describe."""
 	if mean_value is None:
 		mean_value = mean(series)
@@ -72,7 +74,7 @@ def std(series, mean_value=None) -> float:
 	return (total / (n - 1)) ** 0.5 if n > 1 else float('nan')
 
 
-def min_value(series) -> float:
+def min_value(series: Iterable[Any]) -> float:
 	result = float('nan')
 	for v in values(series):
 		if is_missing(result) or v < result:
@@ -80,7 +82,7 @@ def min_value(series) -> float:
 	return result
 
 
-def max_value(series) -> float:
+def max_value(series: Iterable[Any]) -> float:
 	result = float('nan')
 	for v in values(series):
 		if is_missing(result) or v > result:
@@ -88,7 +90,7 @@ def max_value(series) -> float:
 	return result
 
 
-def quantile(series, q: float) -> float:
+def quantile(series: Iterable[Any], q: float) -> float:
 	"""Linear interpolation between closest ranks (pandas default)."""
 	ordered = sorted(values(series))
 	n = len(ordered)
@@ -102,7 +104,7 @@ def quantile(series, q: float) -> float:
 	return ordered[lower] * (1 - weight) + ordered[lower + 1] * weight
 
 
-def numeric_courses(data: pd.DataFrame) -> list:
+def numeric_courses(data: pd.DataFrame) -> list[str]:
 	return [c for c in data.columns
 		if c != 'Index' and pd.api.types.is_numeric_dtype(data[c]) and count(data[c]) > 0]
 

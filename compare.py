@@ -5,7 +5,7 @@ import sys
 from dslr_common import HOUSE_COLUMN, load_csv
 
 
-def main():
+def main() -> None:
 	pred_file = sys.argv[1] if len(sys.argv) > 1 else 'houses.csv'
 	truth_file = sys.argv[2] if len(sys.argv) > 2 else 'datasets/dataset_truth.csv'
 	pred = load_csv(pred_file).set_index('Index')[HOUSE_COLUMN]

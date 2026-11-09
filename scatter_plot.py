@@ -8,8 +8,15 @@ import itertools
 
 import matplotlib.pyplot as plt
 
-from dslr_common import (HOUSE_COLORS, HOUSE_COLUMN, is_missing, load_csv, mean,
-	numeric_courses, require_house_column)
+from dslr_common import (
+	HOUSE_COLORS,
+	HOUSE_COLUMN,
+	is_missing,
+	load_csv,
+	mean,
+	numeric_courses,
+	require_house_column,
+)
 
 
 def pearson(xs, ys) -> float:
@@ -22,7 +29,7 @@ def pearson(xs, ys) -> float:
 	return sxy / (sxx * syy) ** 0.5
 
 
-def main():
+def main() -> None:
 	parser = argparse.ArgumentParser(description='Scatter plot of the two most similar features.')
 	parser.add_argument('dataset')
 	parser.add_argument('-o', '--output', help='save the figure instead of only showing it')
