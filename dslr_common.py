@@ -16,7 +16,7 @@ HOUSE_COLORS = {
 # Features used for training, chosen from the visualisations (see README):
 # - Arithmancy, Care of Magical Creatures: homogeneous across houses (histogram) -> no signal
 # - Defense Against the Dark Arts: exactly -Astronomy/100 (scatter_plot) -> redundant, keep Astronomy
-# - Potions: heavy overlap between houses in the pair plot -> weak signal
+# - Potions: weakest separation of the rest (histogram spread 0.89) and no held-out gain
 FEATURES = [
 	'Astronomy',
 	'Herbology',
@@ -32,7 +32,7 @@ DROPPED_FEATURES = {
 	'Arithmancy': 'homogeneous across houses',
 	'Care of Magical Creatures': 'homogeneous across houses',
 	'Defense Against the Dark Arts': 'duplicate of Astronomy (r = -1)',
-	'Potions': 'strong overlap between houses',
+	'Potions': 'weakest separation left, no held-out accuracy gain',
 }
 
 
