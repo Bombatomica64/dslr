@@ -7,12 +7,11 @@ Prints the eight rows of the subject, then (bonus) Var, Range, IQR, Skew and Kur
 import argparse
 import shutil
 import sys
-from collections.abc import Iterable
-from typing import Any
 
 import pandas as pd
 
 from dslr_common import (
+	Column,
 	count,
 	kurtosis,
 	load_csv,
@@ -39,7 +38,7 @@ COL_WIDTH = 14
 LABEL_WIDTH = 6
 
 
-def column_stats(series: Iterable[Any], extra: bool = True) -> list[float]:
+def column_stats(series: Column, extra: bool = True) -> list[float]:
 	m = mean(series)
 	low, high = min_value(series), max_value(series)
 	q1, q3 = quantile(series, 0.25), quantile(series, 0.75)
