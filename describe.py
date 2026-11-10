@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""describe.py dataset.csv - pandas-like describe() built from hand-written statistics."""
+"""describe.py dataset.csv [--basic] - pandas-like describe() built from hand-written statistics.
+
+Prints the eight rows of the subject, then (bonus) Var, Range, IQR, Skew and Kurt.
+--basic prints only the eight required rows.
+"""
+import argparse
 import shutil
 import sys
 from collections.abc import Iterable
@@ -9,25 +14,39 @@ import pandas as pd
 
 from dslr_common import (
 	count,
+	kurtosis,
 	load_csv,
 	max_value,
 	mean,
 	min_value,
 	numeric_courses,
 	quantile,
+	skewness,
 	std,
+	variance,
 )
 
-ROWS = ['Count', 'Mean', 'Std', 'Min', '25%', '50%', '75%', 'Max']
+BASIC_ROWS = ['Count', 'Mean', 'Std', 'Min', '25%', '50%', '75%', 'Max']
+EXTRA_ROWS = ['Var', 'Range', 'IQR', 'Skew', 'Kurt']
+EXTRA_LEGEND = {
+	'Var': 'sample variance (std squared)',
+	'Range': 'Max - Min',
+	'IQR': '75% - 25%: spread of the middle half of the values',
+	'Skew': 'asymmetry: > 0 long right tail, < 0 long left tail, 0 symmetric',
+	'Kurt': 'tail weight vs a normal curve: > 0 heavy tails, < 0 light tails',
+}
 COL_WIDTH = 14
 LABEL_WIDTH = 6
 
 
-def column_stats(series: Iterable[Any]) -> list[float]:
+def column_stats(series: Iterable[Any], extra: bool = True) -> list[float]:
 	m = mean(series)
-	return [count(series), m, std(series, m), min_value(series),
-		quantile(series, 0.25), quantile(series, 0.5), quantile(series, 0.75),
-		max_value(series)]
+	low, high = min_value(series), max_value(series)
+	q1, q3 = quantile(series, 0.25), quantile(series, 0.75)
+	stats = [count(series), m, std(series, m), low, q1, quantile(series, 0.5), q3, high]
+	if extra:
+		stats += [variance(series, m), high - low, q3 - q1, skewness(series, m), kurtosis(series, m)]
+	return stats
 
 
 def short_name(name: str) -> str:
@@ -35,11 +54,12 @@ def short_name(name: str) -> str:
 	return name if len(name) <= width else name[:width - 1] + '.'
 
 
-def describe(data: pd.DataFrame) -> None:
+def describe(data: pd.DataFrame, extra: bool = True) -> None:
 	features = numeric_courses(data)
 	if not features:
 		sys.exit("Error: no numeric feature found.")
-	stats = {f: column_stats(data[f]) for f in features}
+	rows = BASIC_ROWS + EXTRA_ROWS if extra else BASIC_ROWS
+	stats = {f: column_stats(data[f], extra) for f in features}
 	term_width = shutil.get_terminal_size((160, 24)).columns
 	per_block = max(1, (term_width - LABEL_WIDTH) // COL_WIDTH)
 	for start in range(0, len(features), per_block):
@@ -47,12 +67,18 @@ def describe(data: pd.DataFrame) -> None:
 		if start:
 			print()
 		print(' ' * LABEL_WIDTH + ''.join(f"{short_name(f):>{COL_WIDTH}}" for f in block))
-		for r, row in enumerate(ROWS):
+		for r, row in enumerate(rows):
 			cells = ''.join(f"{stats[f][r]:>{COL_WIDTH}.6f}" for f in block)
 			print(f"{row:<{LABEL_WIDTH}}{cells}")
+	if extra:
+		print("\nExtra rows:")
+		for row, meaning in EXTRA_LEGEND.items():
+			print(f"  {row:<{LABEL_WIDTH}}{meaning}")
 
 
 if __name__ == "__main__":
-	if len(sys.argv) != 2:
-		sys.exit("Usage: ./describe.py <dataset.csv>")
-	describe(load_csv(sys.argv[1]))
+	parser = argparse.ArgumentParser(description='Describe every numeric feature of a dataset.')
+	parser.add_argument('dataset', help='CSV file (e.g. datasets/dataset_train.csv)')
+	parser.add_argument('--basic', action='store_true', help='only the 8 rows of the subject')
+	args = parser.parse_args()
+	describe(load_csv(args.dataset), extra=not args.basic)

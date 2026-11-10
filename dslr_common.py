@@ -104,6 +104,45 @@ def quantile(series: Iterable[Any], q: float) -> float:
 	return ordered[lower] * (1 - weight) + ordered[lower + 1] * weight
 
 
+def variance(series: Iterable[Any], mean_value: float | None = None) -> float:
+	"""Sample variance (ddof=1): the square of std."""
+	return std(series, mean_value) ** 2
+
+
+def central_moment(series: Iterable[Any], power: int, mean_value: float) -> float:
+	"""Average of (x - mean)^power over the non-missing values."""
+	total = 0.0
+	n = 0
+	for v in values(series):
+		total += (v - mean_value) ** power
+		n += 1
+	return total / n if n else float('nan')
+
+
+def skewness(series: Iterable[Any], mean_value: float | None = None) -> float:
+	"""Adjusted Fisher-Pearson skewness G1 (needs n >= 3), like pandas.skew."""
+	if mean_value is None:
+		mean_value = mean(series)
+	n = count(series)
+	m2 = central_moment(series, 2, mean_value)
+	if n < 3 or not m2:
+		return float('nan')
+	g1 = central_moment(series, 3, mean_value) / m2 ** 1.5
+	return g1 * (n * (n - 1)) ** 0.5 / (n - 2)
+
+
+def kurtosis(series: Iterable[Any], mean_value: float | None = None) -> float:
+	"""Adjusted excess kurtosis G2 (needs n >= 4), like pandas.kurt."""
+	if mean_value is None:
+		mean_value = mean(series)
+	n = count(series)
+	m2 = central_moment(series, 2, mean_value)
+	if n < 4 or not m2:
+		return float('nan')
+	g2 = central_moment(series, 4, mean_value) / m2 ** 2 - 3
+	return (n - 1) / ((n - 2) * (n - 3)) * ((n + 1) * g2 + 6)
+
+
 def numeric_courses(data: pd.DataFrame) -> list[str]:
 	return [c for c in data.columns
 		if c != 'Index' and pd.api.types.is_numeric_dtype(data[c]) and count(data[c]) > 0]

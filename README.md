@@ -13,7 +13,7 @@ uv sync --no-dev     # without scikit-learn, which only cross-checks accuracy
 
 ## Usage
 ```sh
-uv run describe.py datasets/dataset_train.csv            # describe table (features as columns)
+uv run describe.py datasets/dataset_train.csv [--basic]  # describe table (features as columns); --basic = the 8 rows of the subject only
 uv run histogram.py datasets/dataset_train.csv [-o h.png]
 uv run scatter_plot.py datasets/dataset_train.csv [-o s.png]
 uv run pair_plot.py datasets/dataset_train.csv [-o p.png]
@@ -64,8 +64,9 @@ The evaluator compares the predicted houses with hidden labels using accuracy.
   statistics used throughout the project. `load_csv` uses pandas for reading, while
   `values`, `count`, `mean`, `std`, `min_value`, `max_value` and `quantile` implement
   the numerical summaries explicitly. Missing floating-point values are excluded.
-- `describe.py` computes the eight summary rows for each numeric course and prints
-  columns in blocks sized to the terminal. It excludes the `Index` identifier.
+- `describe.py` computes the eight summary rows of the subject for each numeric course
+  and, as a bonus, five more (`Var`, `Range`, `IQR`, `Skew`, `Kurt`, each explained in a short legend under the table; `--basic` hides both).
+  It prints columns in blocks sized to the terminal and excludes the `Index` identifier.
 - `histogram.py` overlays one score histogram per house for each course. It ranks
   courses by the sample standard deviation of their house means divided by the overall
   standard deviation. This is a heuristic for similarity of means, not a proof that
@@ -88,6 +89,13 @@ Minimum and maximum are the smallest and largest values. For a quantile q, the c
 sorts the observations, finds position (n − 1)q and linearly interpolates between the
 neighbouring values. The 25%, 50% and 75% quantiles are the first quartile, median and
 third quartile. These calculations do not call pandas `describe` or a statistics library.
+
+The bonus rows are hand-written too. `Var` is the sample variance (the square of the sample
+standard deviation), `Range` is max − min and `IQR` is the 75% quantile minus the 25% one.
+`Skew` is the adjusted Fisher-Pearson skewness G1 = g1·√(n(n−1))/(n−2) with g1 = m₃/m₂^1.5,
+and `Kurt` is the adjusted excess kurtosis G2 = (n−1)/((n−2)(n−3))·((n+1)·g2 + 6) with
+g2 = m₄/m₂² − 3, where mₖ is the average of (x − mean)^k. Skew needs n ≥ 3 and Kurt n ≥ 4;
+otherwise (or for a constant column) they print `nan`. All five match `pandas` to about 1e-13.
 
 ### Feature choices and data preparation
 
