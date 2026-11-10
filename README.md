@@ -65,7 +65,7 @@ The evaluator compares the predicted houses with hidden labels using accuracy.
   `values`, `count`, `mean`, `std`, `min_value`, `max_value` and `quantile` implement
   the numerical summaries explicitly. Missing floating-point values are excluded.
 - `describe.py` computes the eight summary rows of the subject for each numeric course
-  and, as a bonus, five more (`Var`, `Range`, `IQR`, `Skew`, `Kurt`; `--basic` hides them).
+  and, as a bonus, five more (`Var`, `Range`, `IQR`, `Skew`, `Kurt`, each explained in a short legend under the table; `--basic` hides both).
   It prints columns in blocks sized to the terminal and excludes the `Index` identifier.
 - `histogram.py` overlays one score histogram per house for each course. It ranks
   courses by the sample standard deviation of their house means divided by the overall

@@ -28,6 +28,13 @@ from dslr_common import (
 
 BASIC_ROWS = ['Count', 'Mean', 'Std', 'Min', '25%', '50%', '75%', 'Max']
 EXTRA_ROWS = ['Var', 'Range', 'IQR', 'Skew', 'Kurt']
+EXTRA_LEGEND = {
+	'Var': 'sample variance (std squared)',
+	'Range': 'Max - Min',
+	'IQR': '75% - 25%: spread of the middle half of the values',
+	'Skew': 'asymmetry: > 0 long right tail, < 0 long left tail, 0 symmetric',
+	'Kurt': 'tail weight vs a normal curve: > 0 heavy tails, < 0 light tails',
+}
 COL_WIDTH = 14
 LABEL_WIDTH = 6
 
@@ -63,6 +70,10 @@ def describe(data: pd.DataFrame, extra: bool = True) -> None:
 		for r, row in enumerate(rows):
 			cells = ''.join(f"{stats[f][r]:>{COL_WIDTH}.6f}" for f in block)
 			print(f"{row:<{LABEL_WIDTH}}{cells}")
+	if extra:
+		print("\nExtra rows:")
+		for row, meaning in EXTRA_LEGEND.items():
+			print(f"  {row:<{LABEL_WIDTH}}{meaning}")
 
 
 if __name__ == "__main__":
